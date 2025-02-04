@@ -2,8 +2,7 @@ package com.example.brief17;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
-import org.springframework.context.annotation.Import;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 
 import com.example.brief17.entity.Student;
@@ -13,11 +12,45 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.Optional;
 
-// TODO: Ajouter les tags nécessaires pour charger H2, charger le profil de test et importer le StudentService
+@SpringBootTest(
+        webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT,
+        properties = {
+        "spring.datasource.url=jdbc:h2:mem:testdb",
+        "spring.jpa.hibernate.ddl-auto=create-drop"
+        }
+        )
+@ActiveProfiles("test")
 class StudentServiceIntegrationTest {
+    @Autowired
+    private StudentService studentService;
 
     @Test
-    void shouldSaveAndRetrieveStudent() {
-        // TODO: Implémenter le test d'intégration, insérer un Student en base de données et le récupérrer
+    void shouldSaveAndRetrieveStudent() throws InterruptedException {
+        Student testStudent = new Student();
+        testStudent.setName("John");
+        testStudent.setAddress("12 rue de la Paix");
+        studentService.saveStudent(testStudent);
+
+        // Délai
+        Thread.sleep(40000);
+
+        Optional<Student> retrievedStudent = studentService.findStudentById(testStudent.getId());
+        assertThat(retrievedStudent).isPresent();
+        assertThat(retrievedStudent.get().getName()).isEqualTo("John");
+    }
+
+    @Test
+    void shouldFindStudentById() throws InterruptedException {
+        Student savedStudent = new Student();
+        savedStudent.setName("John");
+        savedStudent.setAddress("12 rue de la Paix");
+        Student returnedStudent = studentService.saveStudent(savedStudent);
+
+        // Délai
+        Thread.sleep(40000);
+
+        Optional<Student> foundStudent = studentService.findStudentById(returnedStudent.getId());
+        assertThat(foundStudent).isPresent();
+        assertThat(foundStudent.get().getName()).isEqualTo("John");
     }
 }
